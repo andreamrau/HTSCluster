@@ -1,4 +1,4 @@
-# Ceci est un test (Gildas).
+# this is a test (Gildas)
 
 PoisMixClus <- function(y, g, conds, norm="TMM",  
 	init.type = "small-em", init.runs = 1, init.iter = 10, alg.type = "EM", cutoff = 10e-6, 
