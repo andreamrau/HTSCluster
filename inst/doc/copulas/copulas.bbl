@@ -1,0 +1,25 @@
+\begin{thebibliography}{1}
+
+\bibitem{Rau2014}
+A.~Rau et~al.
+\newblock {Co-expression analysis of high-throughput transcriptome sequencing
+  data with Poisson mixture models}.
+\newblock {\em Bioinformatics}, 2015.
+
+\bibitem{kosmidis2016model}
+Ioannis Kosmidis and Dimitris Karlis.
+\newblock Model-based clustering using copulas with applications.
+\newblock {\em Statistics and computing}, 26(5):1079--1099, 2016.
+
+\bibitem{nikoloulopoulos2009modeling}
+Aristidis~K Nikoloulopoulos and Dimitris Karlis.
+\newblock Modeling multivariate count data using copulas.
+\newblock {\em Communications in Statistics-Simulation and Computation},
+  39(1):172--187, 2009.
+
+\bibitem{mazo2017semiparametric}
+Gildas Mazo.
+\newblock A semiparametric and location-shift copula-based mixture model.
+\newblock {\em Journal of Classification}, 34(3):444--464, 2017.
+
+\end{thebibliography}

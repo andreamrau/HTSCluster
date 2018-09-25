@@ -1,0 +1,171 @@
+%\VignetteIndexEntry{Co-expression analysis of RNA-seq data with the "HTSCluster" package}
+%\VignettePackage{HTSCluster}
+
+% To compile this document
+% library('cacheSweave');rm(list=ls());Sweave('HTSClusterUsersGuide.Rnw',driver=cacheSweaveDriver());system("pdflatex HTSClusterUsersGuide")
+
+\documentclass[10pt,oneside]{article}
+\usepackage{natbib}
+%%\usepackage{whbiocvignette}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+
+%\newcommand{\thetitle}{Co-expression analysis of RNA-seq data with the \Rpackage{HTSCluster} package}
+\newcommand\bfm[1]{\ensuremath\boldsymbol{#1}}
+\newcommand\x{\mathbf{x}}
+\newcommand\y{\mathbf{y}}
+\newcommand\z{\mathbf{z}}
+\newcommand\s{\mathbf{s}}
+\newcommand\w{\mathbf{w}}
+\newcommand\X{\mathbf{X}}
+\newcommand\Y{\mathbf{Y}}
+\newcommand\Z{\mathbf{Z}}
+\newcommand\Pois{\mathcal{P}}
+\newcommand\MVPois{\mathcal{MVP}}
+\newcommand\PSI{\bfm{\Psi}}
+\newcommand\LAMBDA{\bfm{\lambda}}
+\newcommand\THETA{\bfm{\theta}}
+\newcommand\MU{\bfm{\mu}}
+\newcommand\PI{\bfm{\pi}}
+\renewcommand{\b}{{(b)}}
+\newcommand{\bb}{{(b+1)}}
+\newcommand{\expec}{\text{E}}
+
+\title{Copula-based Poisson mixture models for RNAseq data}
+\author{Dimitris Karlis \and Gildas Mazo \and Andrea Rau\footnote{alphabetical order}}
+
+\date{}
+
+
+
+%\usepackage{Sweave}
+\begin{document}
+%\input{HTSClusterUsersGuide-concordance}
+
+\maketitle
+
+\section{Reminder about the EM algorithm}
+
+Let $\y$ be the observed data and $(\y,z)$ be the complete data. The heuristic of the EM algorithm consists of maximizing
+\begin{align*}
+  \expec\left(\log f(\y,Z)\vert \y\right).
+\end{align*}
+The law of $Z\vert\y$ is
+\begin{align*}
+  P(Z=k\vert \y)\equiv f(k\vert\y)=
+  \frac{f(\y\vert k)\pi_k}{\sum_{k=1}^K\pi_kf(\y\vert k)}=
+  \frac{f_k(\y)\pi_k}{\sum_{k=1}^K\pi_kf_k(\y)}.
+\end{align*}
+
+The EM algorithm works on $b=0,1,\dots$ as follows.
+
+\medskip
+
+\noindent \underline{E step.} For $k=1,\dots,K$, $i=1,\dots,n$, compute
+\begin{align*}
+  f(k\vert\y_i;\THETA^\b)=
+  \frac{f_k(\y_i;\THETA^\b)\pi_k^\b}{
+  \sum_{k=1}^K\pi_k^\b f_k(\y_i;\THETA^\b)}.
+\end{align*}
+
+\medskip
+
+\noindent \underline{M step.} Maximize over $(\PI,\THETA)$:
+
+\begin{align}\label{eq:em-algo-standard}
+  &\sum_{i=1}^n\sum_{k=1}^Kf(k\vert\y_i;\THETA^\b) \notag
+  \log f(\y_i,k;\THETA)\\
+  =&\sum_{i=1}^n\sum_{k=1}^Kf(k\vert\y_i;\THETA^\b)
+     \log f_k(\y_i;\THETA) +
+     \sum_{i=1}^n\sum_{k=1}^Kf(k\vert\y_i;\THETA^\b) \log \pi_k \notag
+\end{align}
+
+%------------------------------------------------------------
+\section{Andrea's model} 
+%------------------------------------------------------------
+
+\subsection{The Poisson mixture model for RNAseq data}
+
+The following description closely follows that in~\citep{Rau2014}.
+Let $Y_{ijl}$ be the random variable corresponding to the digital gene expression measure (DGE) for biological entity $i$ ($i = 1,\ldots, n$) of condition $j$ ($j = 1,\ldots,d$) in biological replicate $l$ ($l = 1,\ldots,r_j$), with $y_{ijl}$ being the corresponding observed value of $Y_{ijl}$. Let $q=\sum_{j=1}^d r_j$ be the total number of variables (all replicates in all conditions) in the data, such that $\y = (y_{ijl})$ is the $n\times q$ matrix of the DGE for all observations and variables, and $\y_i$ is the $q$-dimensional vector of DGE for all variables of observation $i$.
+We use dot notation to indicate summations in various directions, e.g., $y_{\cdot jl} = \sum_{i}y_{ijl}$, $y_{i \cdot\cdot} = \sum_{j}\sum_{l} y_{ijl}$, and so on.
+
+To cluster RNA-seq data, we consider a model-based clustering procedure based on mixture of Poisson distributions.
+The data $\y$ are assumed to come from $K$ distinct subpopulations (clusters), each of which is modeled separately:
+\begin{equation}
+f(\y;K,\PSI_K)
+= \prod_{i=1}^n \sum_{k=1}^K \pi_k f_k(\y_i;\bfm{\theta}_{ik}) \nonumber
+\end{equation}
+where $\PSI_K = ( \pi_1,\ldots,\pi_{K-1}, \bfm{\theta}^\prime )^\prime$, $\bfm{\theta}^\prime$ contains all of the parameters in $\{\bfm{\theta}_{ik}\}_{i,k}$ and
+$\PI = (\pi_1,\ldots,\pi_K)^\prime$ are the mixing proportions, with $\pi_k \in (0,1)$ for all $k$ and $\sum_{k=1}^K \pi_k = 1$. Samples are assumed to be independent conditionally on the components:
+\begin{equation}
+f_k(\y_i;\bfm{\theta}_{ik})=\prod_{j=1}^d \prod_{l=1}^{r_j} \Pois(y_{ijl};\mu_{ijlk}), \nonumber
+\end{equation}
+where $\Pois(\cdot;\mu_{ijlk})$ denotes the standard Poisson probability mass function with mean $\mu_{ijlk}$.
+
+Each mean $\mu_{ijlk}$ is parameterized by
+\begin{equation}
+\mu_{ijlk} = w_i s_{jl} \lambda_{jk} \nonumber
+\end{equation}
+where $w_i = y_{i..}$ corresponds to the overall expression level of observation $i$ (e.g., weakly to strongly expressed)
+and $s_{jl}$ represents the normalized library size for replicate $l$ of condition $j$, such that $\sum_{j,l} s_{jl} = 1$. These normalization factors take into account the fact that the number of reads expected to map to a particular gene depends not only on its expression level, but also on the library size (overall number of mapped reads) and the overall composition of the RNA population being sampled. We note that $\{s_{jl}\}_{j,l}$ are estimated from the data prior to fitting the model, and like the overall expression levels $w_i$, they are subsequently considered to be fixed in the Poisson mixture model. Finally, the unknown parameter vector $\LAMBDA_{k} = (\lambda_{1k},\ldots,\lambda_{dk})$ corresponds to the clustering parameters that define the profiles of the genes in cluster $k$ across all biological conditions.
+
+\subsection{Inference through the EM algorithm}
+To estimate mixture parameters $\PSI_K=(\PI, \LAMBDA_1, \ldots, \LAMBDA_K)$ by computing the maximum likelihood estimate (MLE), an Expectation-Maximization (EM) algorithm is considered. 
+After initializing the parameters $\PSI^{(0)}_K$ and $\z^{(0)}$ by a so-called Small-EM strategy, the E-step at iteration $b$ corresponds to computing the conditional probability that an observation $i$ arises from the $k{\mathrm{th}}$ component for the current value of the mixture parameters:
+\begin{equation}
+t_{ik}^{(b)} = \frac{\pi_k^\b f_k(\y_i; \THETA_{ik}^\b)}{\sum_{m=1}^K\pi_m^\b f_m(\y_i; \THETA_{im}^\b)} \nonumber
+\end{equation}
+where $\THETA_{ik}^{(b)} = \{ w_i s_{jl} \lambda_{jk}^{(b)} \}_{jl}$.       
+Then, in the M-step the mixture parameter estimates are updated to maximize the expected value of the completed likelihood, which leads to weighting the observation $i$ for group $k$ with the conditional probability $t_{ik}^{(b)}$. 
+Thus, 
+\begin{equation}
+\pi_k^\bb = \frac{1}{n} \sum_{i=1}^n t_{ik}^\b,
+\end{equation}
+and
+\begin{equation}
+\lambda_{jk}^\bb = \frac{\underset{i=1}{\stackrel{n}{\sum}} t_{ik}^\b y_{ij\cdot}}{s_{j\cdot} \underset{i=1}{\stackrel{n}{\sum}} t_{ik}^\b y_{i\cdot\cdot}}, \nonumber
+\end{equation}
+since $w_i=y_{i\cdot\cdot}$.
+Note that at each iteration of the EM algorithm, we obtain that $\underset{j=1}{\stackrel{d}{\sum}} \lambda_{jk}^{(b)} s_{j.} =1$.
+Thus $\lambda_{jk}^{(b)} s_{j\cdot}$ can be interpreted as the proportion of reads that are attributed to condition $j$ in cluster $k$, after accounting for differences due to library size; this proportion is shared among the replicates of condition $j$ according to their respective library sizes $s_{jl}$.
+
+\section{Incorporating copulas}
+
+The idea is to model the dependence between the conditions/replicates of the gene expressions with copulas. 
+
+\begin{itemize}
+\item First we need to decide where to put the copulas. Unlike conditions, can replicates be considered independent? 
+\item Then rewrite the model
+\item Finally write an EM algo as in~\cite{kosmidis2016model,nikoloulopoulos2009modeling}. Or a pseudo-EM algo as in~\cite{mazo2017semiparametric}.
+\end{itemize}
+
+\section{Copulas}
+
+A copula is a function $C$ which can ``couple'' the marginals to model the dependence structure.
+
+For instance, let two Poisson distributions, $f(y;\mu_j)=\mu_j^ye^{-\mu_j}/y!$, $j=1,2$. The (cumulative) distribution functions are given by
+\begin{align*}
+  F(y;\mu_j)=\sum_{m=0}^y f(m;\mu_j), \quad j=1,2.
+\end{align*}
+Without copulas, the joint distribution function is given by
+\begin{align*}
+  F(y_1,y_2)=P(Y_1\le y_1,Y_2\le y_2)=F(y_1;\mu_1)F(y_2;\mu_2)
+\end{align*}
+(independence).
+We can couple the marginals to add a dependence structure. Take, for instance, the AMH copula:
+\begin{align*}
+  C(u,v;\gamma)=uv+\gamma uv(1-u)(1-v), \gamma\in[-1,1], \, u,v\in[0,1].
+\end{align*}
+Then 
+\begin{align*}
+  F(y_1,y_2;\mu_1,\mu_2,\gamma)\equiv C(F(y_1;\mu_1),F(y_2;\mu_2);\gamma),
+\end{align*}
+is a well defined distribution function with a dependence structure.
+
+\clearpage
+\bibliographystyle{unsrt}
+\bibliography{HTSCluster}
+
+
+\end{document}

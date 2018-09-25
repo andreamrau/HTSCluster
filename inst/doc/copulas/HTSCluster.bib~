@@ -1,0 +1,85 @@
+% This file was created with JabRef 2.9.2.
+% Encoding: Cp1252
+
+@ARTICLE{Baudry2012,
+  author = {Baudry, J.-P. and others},
+  title = {Slope heuristics: overview and implementation},
+  journal = {Stat. Comp.},
+  year = {2012},
+  volume = {22},
+  pages = {455-470},
+  owner = {arau},
+  timestamp = {2014.08.11}
+}
+
+@ARTICLE{Frazee2011,
+  author = {Frazee, A. C. and others},
+  title = {{ReCount: a multi-experiment resource of analysis-ready RNA-seq gene
+	count datasets}},
+  journal = {BMC Bioinformatics},
+  year = {2011},
+  volume = {12},
+  number = {449},
+  owner = {arau},
+  timestamp = {2012.05.29}
+}
+
+@ARTICLE{Rau2014,
+  author = {Rau, A. and others},
+  title = {{Co-expression analysis of high-throughput transcriptome sequencing
+	data with Poisson mixture models}},
+  journal = {Bioinformatics},
+  year = {2015},
+  doi = {doi: 10.1093/bioinformatics/btu845},
+  owner = {Arau},
+  timestamp = {2014.04.24}
+}
+
+@ARTICLE{Rau2013,
+  author = {Rau, A. and others},
+  title = {Data-based filtering for replicated high-throughput transcriptome
+	sequencing experiments},
+  journal = {Bioinf.},
+  year = {2013},
+  volume = {29},
+  pages = {2146--2152},
+  number = {17},
+  owner = {Arau},
+  timestamp = {2013.09.16}
+}
+
+@ARTICLE{Robinson2010,
+  author = {Robinson, M.D. and Oshlack, A.},
+  title = {{A scaling normalization method for differential expression analysis
+	of RNA-seq data}},
+  journal = {Genome Biology},
+  year = {2010},
+  volume = {11},
+  number = {R25},
+  comment = {The number of tags expected to map to a gene is not only dependent
+	on the expression level and length of the gene, but also the composition
+	of the RNA population that is being sampled...we cannot always expect
+	the proportions of different experiment conditions (e.g;, tissues)
+	to be directly comparable! Proportion of reads attributed to a given
+	gene in a library depends on the expression properties of the whold
+	sample rather than just the expression level of that gene. Also can
+	use estimated normalization factors directly in a statistical model
+	while preserving sampling properties of the data. LOTS of informative
+	code/data available on website. TMM Normalization.},
+  owner = {Andrea_2},
+  timestamp = {2010.11.10}
+}
+
+@ARTICLE{Sultan2008,
+  author = {Sultan, M. and others},
+  title = {A global view of gene activity and alternative splicing by deep sequencing
+	of the human transcriptome},
+  journal = {Science},
+  year = {2008},
+  volume = {15},
+  pages = {956-60},
+  number = {5891},
+  owner = {arau},
+  timestamp = {2012.07.16}
+}
+

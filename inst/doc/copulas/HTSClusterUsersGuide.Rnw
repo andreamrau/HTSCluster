@@ -1,0 +1,281 @@
+%\VignetteIndexEntry{Co-expression analysis of RNA-seq data with the "HTSCluster" package}
+%\VignettePackage{HTSCluster}
+
+% To compile this document
+% library('cacheSweave');rm(list=ls());Sweave('HTSClusterUsersGuide.Rnw',driver=cacheSweaveDriver());system("pdflatex HTSClusterUsersGuide")
+
+\documentclass[10pt,oneside]{article}
+\usepackage{natbib}
+\usepackage{whbiocvignette}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+
+\newcommand{\thetitle}{Co-expression analysis of RNA-seq data with the \Rpackage{HTSCluster} package}
+\newcommand\bfm[1]{\ensuremath\boldsymbol{#1}}
+\newcommand\x{\mathbf{x}}
+\newcommand\y{\mathbf{y}}
+\newcommand\z{\mathbf{z}}
+\newcommand\s{\mathbf{s}}
+\newcommand\w{\mathbf{w}}
+\newcommand\X{\mathbf{X}}
+\newcommand\Y{\mathbf{Y}}
+\newcommand\Z{\mathbf{Z}}
+\newcommand\Pois{\mathcal{P}}
+\newcommand\MVPois{\mathcal{MVP}}
+\newcommand\PSI{\bfm{\Psi}}
+\newcommand\LAMBDA{\bfm{\lambda}}
+\newcommand\THETA{\bfm{\theta}}
+\newcommand\MU{\bfm{\mu}}
+\newcommand\PI{\bfm{\pi}}
+\renewcommand{\b}{{(b)}}
+\newcommand{\bb}{{(b+1)}}
+
+\title{\textsf{\textbf{\thetitle}}}
+\author{Andrea Rau$^1$, Cathy Maugis-Rabusseau, Marie-Laure Martin-Magniette, and Gilles Celeux\\[1em]
+\texttt{$^1$andrea.rau@jouy.inra.fr}}
+
+% The following command makes use of SVN's 'Date' keyword substitution
+% To activate this, I used: svn propset svn:keywords Date HTSClusterUsersGuide.Rnw
+\date{\Rpackage{HTSCluster} version \Sexpr{packageDescription("HTSCluster")$Version}}
+
+\SweaveOpts{keep.source=TRUE,eps=FALSE,pdf=FALSE,png=TRUE,include=FALSE,width=5.4,height=3.7,resolution=180}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+<<options,results=hide,echo=FALSE>>=
+options(digits=3, width=80)
+@
+
+\maketitle
+
+\begin{abstract}
+This vignette illustrates the use of the \Rpackage{HTSCluster} package through a toy example of a co-expression analysis using the human RNA-seq data from Sultan {\it et al.} (2008) \citep{Sultan2008}. For a full presentation of the statistical method, please see our paper \citep{Rau2014}. \textcolor{red}{Note that starting in version 2.0.8 of the package, the \texttt{lib.size} and \texttt{lib.type} parameters in the \texttt{PoisMixClus} and \texttt{PoisMixClusWrapper} functions have been replaced by the single \texttt{norm} parameter (which can, if desired, contain a vector
+of pre-calculated normalization factors).}
+\end{abstract}
+
+\tableofcontents
+
+
+%--------------------------------------------------
+\section{Input data} \label{sec:prep}
+%--------------------------------------------------
+
+In this vignette, we will work with the gene-level read counts from
+the Sultan {\it et al.} (2008) data \citep{Sultan2008}, which may be found in the \Rpackage{HTSFilter} Bioconductor package \citep{Rau2013}. These data were obtained from a human embryonic kidney (HEK293T) and a Ramos B cell line, with two biological replicates in each experimental condition. The raw read counts for 9010 genes and phenotype tables were originally obtained from the ReCount online resource \citep{Frazee2011}.
+
+We begin by loading the necessary packages, data, and phenotypic information for the analysis. 
+
+<<setwd, echo=false>>=
+setwd("C:/Users/arau/Dropbox/RNASeq-Etudes/HTSCluster/Construction_article_Bioinfo/HTSClusterUsersGuide")
+@
+
+<<loadpkg>>=
+library(HTSCluster)
+library(HTSFilter)
+library(Biobase)
+
+data(sultan)
+conds <- as.vector(phenoData(sultan)$cell.line)
+y <- exprs(sultan)
+@
+
+As an additional pre-processing step, we apply the data-based filter proposed in the \texttt{HTSFilter} package \citep{Rau2013} to remove weakly expressed genes across the two conditions. This approach identifies a filtering threshold by maximizing a global Jaccard similarity index calculated between replicates within each condition. After applying this threshold (see Figure~\ref{fig:Jaccard}), 4956 genes were retained for the subsequent co-expression analysis.
+
+\begin{figure}[t!]
+\centering
+\includegraphics{HTSClusterUsersGuide-filter}
+\caption{Global Jaccard similarity index calculated over various filtering thresholds for normalized counts for the \citep{Sultan2008} data via the \texttt{HTSFilter} package \citep{Rau2013}. The data-driven filtering threshold in this case is equal to $s^\star = 12.02$.\label{fig:Jaccard}}
+\end{figure}
+
+<<filter, fig=true, include=false>>=
+y.filter <- HTSFilter(y, conds, norm="TMM")
+table(y.filter$on)  ## 4054 off, 4956 on
+dat.select <- y.filter$filteredData
+@
+
+
+%------------------------------------------------------------
+\section{Identifying co-expressed genes} \label{sec:inference}
+%------------------------------------------------------------
+
+\subsection{Model description}
+
+The following description closely follows that provided in our main paper \citep{Rau2014}.
+
+Let $Y_{ijl}$ be the random variable corresponding to the digital gene expression measure (DGE) for biological entity $i$ ($i = 1,\ldots, n$) of condition $j$ ($j = 1,\ldots,d$) in biological replicate $l$ ($l = 1,\ldots,r_j$), with $y_{ijl}$ being the corresponding observed value of $Y_{ijl}$. Let $q=\sum_{j=1}^d r_j$ be the total number of variables (all replicates in all conditions) in the data, such that $\y = (y_{ijl})$ is the $n\times q$ matrix of the DGE for all observations and variables, and $\y_i$ is the $q$-dimensional vector of DGE for all variables of observation $i$.
+We use dot notation to indicate summations in various directions, e.g., $y_{\cdot jl} = \sum_{i}y_{ijl}$, $y_{i \cdot\cdot} = \sum_{j}\sum_{l} y_{ijl}$, and so on.
+
+\subsubsection{Poisson mixture model}\label{sect:Poissonmixture}
+
+To cluster RNA-seq data, we consider a model-based clustering procedure based on mixture of Poisson distributions.
+The data $\y$ are assumed to come from $K$ distinct subpopulations (clusters), each of which is modeled separately:
+\begin{equation}
+f(\y;K,\PSI_K)
+= \prod_{i=1}^n \sum_{k=1}^K \pi_k f_k(\y_i;\bfm{\theta}_{ik}) \nonumber
+\end{equation}
+where $\PSI_K = ( \pi_1,\ldots,\pi_{K-1}, \bfm{\theta}^\prime )^\prime$, $\bfm{\theta}^\prime$ contains all of the parameters in $\{\bfm{\theta}_{ik}\}_{i,k}$ and
+$\PI = (\pi_1,\ldots,\pi_K)^\prime$ are the mixing proportions, with $\pi_k \in (0,1)$ for all $k$ and $\sum_{k=1}^K \pi_k = 1$. Samples are assumed to be independent conditionally on the components:
+\begin{equation}
+f_k(\y_i;\bfm{\theta}_{ik})=\prod_{j=1}^d \prod_{l=1}^{r_j} \Pois(y_{ijl};\mu_{ijlk}), \nonumber
+\end{equation}
+where $\Pois(\cdot;\mu_{ijlk})$ denotes the standard Poisson probability mass function with mean $\mu_{ijlk}$.
+
+Each mean $\mu_{ijlk}$ is parameterized by
+\begin{equation}
+\mu_{ijlk} = w_i s_{jl} \lambda_{jk} \nonumber
+\end{equation}
+where $w_i = y_{i..}$ corresponds to the overall expression level of observation $i$ (e.g., weakly to strongly expressed)
+and $s_{jl}$ represents the normalized library size for replicate $l$ of condition $j$, such that $\sum_{j,l} s_{jl} = 1$. These normalization factors take into account the fact that the number of reads expected to map to a particular gene depends not only on its expression level, but also on the library size (overall number of mapped reads) and the overall composition of the RNA population being sampled. We note that $\{s_{jl}\}_{j,l}$ are estimated from the data prior to fitting the model, and like the overall expression levels $w_i$, they are subsequently considered to be fixed in the Poisson mixture model. Finally, the unknown parameter vector $\LAMBDA_{k} = (\lambda_{1k},\ldots,\lambda_{dk})$ corresponds to the clustering parameters that define the profiles of the genes in cluster $k$ across all biological conditions.
+
+\subsubsection{Inference}\label{sect:Inference}
+To estimate mixture parameters $\PSI_K=(\PI, \LAMBDA_1, \ldots, \LAMBDA_K)$ by computing the maximum likelihood estimate (MLE), an Expectation-Maximization (EM) algorithm is considered. 
+After initializing the parameters $\PSI^{(0)}_K$ and $\z^{(0)}$ by a so-called Small-EM strategy, the E-step at iteration $b$ corresponds to computing the conditional probability that an observation $i$ arises from the $k{\mathrm{th}}$ component for the current value of the mixture parameters:
+\begin{equation}
+t_{ik}^{(b)} = \frac{\pi_k^\b f_k(\y_i; \THETA_{ik}^\b)}{\sum_{m=1}^K\pi_m^\b f_m(\y_i; \THETA_{im}^\b)} \nonumber
+\end{equation}
+where $\THETA_{ik}^{(b)} = \{ w_i s_{jl} \lambda_{jk}^{(b)} \}_{jl}$.       
+Then, in the M-step the mixture parameter estimates are updated to maximize the expected value of the completed likelihood, which leads to weighting the observation $i$ for group $k$ with the conditional probability $t_{ik}^{(b)}$. Thus,
+\begin{equation}
+\pi_k^\bb = \frac{1}{n} \sum_{i=1}^n t_{ik}^\b  \hspace*{.1cm} \text{ and }  \hspace*{.1cm} \lambda_{jk}^\bb = \frac{\underset{i=1}{\stackrel{n}{\sum}} t_{ik}^\b y_{ij\cdot}}{s_{j\cdot} \underset{i=1}{\stackrel{n}{\sum}} t_{ik}^\b y_{i\cdot\cdot}}, \nonumber
+\end{equation}
+since $w_i=y_{i\cdot\cdot}$.
+Note that at each iteration of the EM algorithm, we obtain that $\underset{j=1}{\stackrel{d}{\sum}} \lambda_{jk}^{(b)} s_{j.} =1$.
+Thus $\lambda_{jk}^{(b)} s_{j\cdot}$ can be interpreted as the proportion of reads that are attributed to condition $j$ in cluster $k$, after accounting for differences due to library size; this proportion is shared among the replicates of condition $j$ according to their respective library sizes $s_{jl}$.
+
+\subsubsection{Model selection}\label{sect:modsel}
+
+For model selection (i.e., the choice of the number of clusters $K$), we make use of the so-called {\it slope heuristics}, which is a data-driven method to calibrate a penalized criterion that is known up to a multiplicative constant. Briefly, in our context the penalty is assumed to be proportional to the number of free parameters $\nu_K$ (i.e., the model dimension), such that $\mathrm{pen}(K) \propto \kappa\nu_K$; we note that this assumption may be verified in practice. The penalty is calibrated using the {\it data-driven slope estimation} (DDSE) procedure available in the \texttt{capushe} R package \citep{Baudry2012}. This procedure directly estimates the slope of the expected linear relationship of the loglikelihood with respect to the model dimension for the most complex models (here, models with large $K$). Denoting the estimated slope $\hat\kappa$, in our context the slope heuristics consists of setting the penalty to be $2\hat\kappa \nu_K$. The number of selected clusters $\hat K$ then corresponds to the value of $K$ minimizing the penalized criterion:
+\begin{equation}
+\mathrm{crit}(K) = -\log f(\y; K, \hat{\PSI}_K) + 2\hat{\kappa} \nu_K. \nonumber
+\end{equation}
+Finally, we note that \texttt{capushe} also provides an alternative procedure for calibrating the penalty called the {\it dimension jump} (Djump). For more details about the DDSE and Djump approaches, see \citep{Baudry2012}. 
+
+Based on $\hat \PSI_{\hat K}$, each observation $i$ is assigned to the component maximizing the conditional probability $\hat{t}_{ik}$ (i.e., using the so-called MAP rule).
+
+\subsection{Co-expression analysis of Sultan {\it et al.} (2008) data}
+
+We perform a single run of HTSCluster for $K = 1, \ldots, 35$ clusters, using the Trimmed Means of M-values (TMM) normalization \citep{Robinson2010}, and the splitting small-EM strategy described in the main paper. In the interest of reduced computational time, the settings here differ slightly from those used in the full analysis (i.e., smaller set of models and a single run); as such, the results presented here differ slightly from those presented in the main paper \citep{Rau2014}.
+
+<<PMM, eval=FALSE>>=
+## ATTENTION: this code is somewhat long to run
+set.seed(12345)
+PMM <- PoisMixClusWrapper(y=dat.select, gmin=1, gmax=35, 
+    conds=conds, split.init=TRUE, norm="TMM")
+@
+
+<<PMMload, echo=FALSE>>=
+load("C:/Users/arau/Dropbox/RNASeq-Etudes/HTSCluster/Construction_article_Bioinfo/HTSClusterUsersGuide/PMMex.RData")
+@
+
+The above code takes about 20 minutes of computation time on a Dell Latitude E6530 quad-core 2.70 GHz Intel(R) Core(TM) with 10GB of RAM, running a 64-bit version of Windows 7 Professional.
+
+\subsubsection{Model selection}
+
+In \Rpackage{HTSCluster}, model selection may be performed using the DDSE calibration for slope heuristics, Djump calibration for slope heuristics, Bayesian Information Criterion (BIC), and Integrated Completed Likelihood (ICL) criterion. The models selected with each of these approaches may be accessed as follows:
+
+<<modsel>>=
+mod.BIC <- PMM$BIC.results
+mod.ICL <- PMM$ICL.results
+mod.Djump <- PMM$Djump.results
+mod.DDSE <- PMM$DDSE.results
+@
+
+The number of clusters selected by each of these model selection approaches may be viewed via a summary function called on the \texttt{PoisMixClusWrapper} object:
+
+<<summaryPMM>>=
+summary(PMM)
+@
+
+Note that the slope heuristics approach may only be applied if more than 10 models are included in the model collection (i.e., if \texttt{gmax}-\texttt{gmin} + 1 is greater than 10); in the case where this constraint is not met, a warning message to this effect is produced. In cases where the slope heuristics approach may be applied, it is essential to verify the diagnostic plots produced by \Rpackage{capushe} prior to basing inference on the selected models (see below), and a message reminding the user of this is displayed. The \Rpackage{capushe} package provides diagnostic plots for the slope heuristics in order to ensure that sufficiently complex models have been considered. 
+
+Results from the \Rpackage{capushe} package over the set of models fit by \Rpackage{HTSCluster} may be found in the \texttt{capushe} subset of objects of class \texttt{HTSClusterWrapper} (i.e., the output of the \texttt{PoisMixClusWrapper} function). To access the results, diagnostic plots (see Figure~\ref{fig:DDSE}), and the selected model dimension of the DDSE method, the following code may be used.
+
+\begin{figure}[t!]
+\centering
+\includegraphics{HTSClusterUsersGuide-capusheDDSE}
+\caption{Diagnostic plots provided by \Rpackage{capushe} package for the DDSE approach; see \citep{Baudry2012} for additional information.\label{fig:DDSE}}
+\end{figure}
+
+<<capusheDDSE, fig=TRUE, include=FALSE, height=6, width=12>>=
+DDSE <- PMM$capushe@DDSE         ## DDSE results
+plot(DDSE, newwindow=F, ask=F)   ## DDSE diagnostic plots
+DDSE@model                       ## Model selected by DDSE
+@
+
+Also, note that all \Rpackage{capushe} diagnostic plots may be obtained directly from the \texttt{HTSClusterWrapper} object using the following command:
+<<capusheother, include=FALSE, fig=FALSE>>=
+## Not run:
+## plot(PMM, graphs="capushe")
+@
+
+Finally, a warning message is produced by \Rpackage{capushe} if the models returned by the DDSE and Djump slope heuristics approaches are not the same.
+
+%------------------------------------------------------------
+\subsubsection{Visualizing results}\label{sec:viz}
+%------------------------------------------------------------
+
+For the following summarization and visualization, we will make use of the model selected by the DDSE approach:
+
+<<modDjump>>=
+mod <- PMM$DDSE.results                     
+@
+
+A built-in summary command allows a text-based overview of the selected model, including the number of clusters, the model selection approach (in this case, DDSE), the number of genes in each cluster, the number of genes with maximum conditional probabilities greater than 90\%, the number of genes in each cluster with maximum conditional probabilities greater than 90\%, and the estimated values of $\hat{\LAMBDA}$ and $\hat{\PI}$.
+
+<<summary>>=
+summary(mod)
+@
+
+The estimated values for $\hat{\LAMBDA}$ and $\hat{\PI}$ may also be visualized using barplots, as in Figure~\ref{fig:lambda}, where bar widths represent the values of $\hat{\PI}$.
+
+\begin{figure}[t!]
+\centering
+\includegraphics{HTSClusterUsersGuide-lambdaplot}
+\caption{Visualization of overall cluster behavior for the Sultan {\it et al.} data. For each cluster, bar plots of $\hat{\lambda}_{jk}s_{j\cdot}$ are drawn for each experimental condition, where the width of each bar corresponds to the estimated proportion $\hat{\pi}_k$\label{fig:lambda}}
+\end{figure}
+
+<<lambdaplot, fig=TRUE, include=FALSE>>=
+plot(mod, graphs="lambda")
+@
+
+Finally, we may also examine a histogram of maximum conditional probabilities of cluster membership for all genes (Figure~\ref{fig:map}, left), as well as boxplots of maximum conditional probabilities of cluster membership for the genes assigned to each cluster (Figure~\ref{fig:map}, right). These plots help to evaluate the degree of certitude accorded by the model in assigning genes to clusters, as well as whether some clusters are attribued a greater degree of uncertainty than others.
+
+<<mapplot, fig=TRUE, include=FALSE>>=
+plot(mod, graphs="map")
+@
+<<mapplot2, fig=TRUE, include=FALSE>>=
+plot(mod, graphs="map.bycluster")
+@
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width = .45\textwidth]{HTSClusterUsersGuide-mapplot}
+\includegraphics[width = .45\textwidth]{HTSClusterUsersGuide-mapplot2}
+\caption{(left) Histogram of maximum conditional probabilities of cluster membership. (right) Boxplots of maximum conditional probabilities of cluster membership for the genes assigned to each cluster.\label{fig:map}}
+\end{figure}
+
+The cluster labels and conditional probabilities of cluster membership assigned to each gene may be accessed using the following code:
+
+<<final>>=
+labels <- mod$labels
+probaPost <- mod$probaPost
+@
+
+%\clearpage
+%------------------------------------------------------------
+\section{Further reading}\label{sec:further}
+%------------------------------------------------------------
+
+For additional information on the statistical method illustrated in this vignette, see \citep{Rau2014}.
+
+\section{Session Info}
+<<sessi>>=
+sessionInfo()
+@
+
+\clearpage
+\bibliographystyle{unsrt}
+\bibliography{HTSCluster}
+
+
+\end{document}
