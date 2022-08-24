@@ -5,9 +5,9 @@ Calculate the conditional per-cluster mean of each observation
 }
 \description{
 This function is used to calculate the conditional per-cluster mean expression for all observations. This value corresponds to
-\eqn{\ensuremath\boldsymbol{\mu} = (\mu_{ijlk}) = (\hat{w}_i \hat{\lambda}_{jk})}{\mu = (\mu_{ijlk}) = (\hat{w}_i \hat{\lambda}_{jk})}
+\eqn{\boldsymbol{\mu} = (\mu_{ijlk}) = (\hat{w}_i \hat{\lambda}_{jk})}{\mu = (\mu_{ijlk}) = (\hat{w}_i \hat{\lambda}_{jk})}
 for the PMM-I model and
-\eqn{\ensuremath\boldsymbol{\mu} = (\mu_{ijlk}) = (\hat{w}_i s_{jl} \hat{\lambda}_{jk})}{\mu = (\mu_{ijlk}) = (\hat{w}_i s_{jl}\hat{\lambda}_{jk})}
+\eqn{\boldsymbol{\mu} = (\mu_{ijlk}) = (\hat{w}_i s_{jl} \hat{\lambda}_{jk})}{\mu = (\mu_{ijlk}) = (\hat{w}_i s_{jl}\hat{\lambda}_{jk})}
 for the PMM-II model.
 }
 \usage{

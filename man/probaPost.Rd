@@ -20,13 +20,13 @@ Number of clusters
 Vector of length \emph{q} defining the condition (treatment group) for each variable (column) in \code{y}
 }
   \item{pi}{
-Vector of length \code{g} containing the current estimate of \eqn{\hat{\ensuremath\boldsymbol{\pi}}}{\pi}
+Vector of length \code{g} containing the current estimate of \eqn{\hat{\boldsymbol{\pi}}}{\pi}
 }
   \item{s}{
 Vector of length \emph{q} containing the estimates for the normalized library size parameters for each of the \emph{q} variables in \code{y}
 }
   \item{lambda}{
-(\emph{d} x \code{g}) matrix containing the current estimate \eqn{\ensuremath\boldsymbol{\lambda}}{\lambda}, where \emph{d} is the number of conditions (treatment groups)
+(\emph{d} x \code{g}) matrix containing the current estimate \eqn{\boldsymbol{\lambda}}{\lambda}, where \emph{d} is the number of conditions (treatment groups)
 }
 }
 

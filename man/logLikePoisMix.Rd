@@ -27,13 +27,13 @@ List of length \emph{g} containing the (\emph{n} x \emph{q}) matrices of conditi
 List of length \emph{g} containing the (\emph{n} x \emph{q}) matrices of conditional mean expression for all observations for another set of parameters, as calculated by the \code{\link{PoisMixMean}} function, where \emph{g} represents the number of clusters
 }
   \item{pi.new}{
-Vector of length \emph{g} containing one estimate for \eqn{\hat{\ensuremath\boldsymbol{\pi}}}{\hat{\pi}}
+Vector of length \emph{g} containing one estimate for \eqn{\hat{\boldsymbol{\pi}}}{\hat{\pi}}
 }
   \item{pi.old}{
-Vector of length \emph{g} containing another estimate for \eqn{\hat{\ensuremath\boldsymbol{\pi}}}{\hat{\pi}}
+Vector of length \emph{g} containing another estimate for \eqn{\hat{\boldsymbol{\pi}}}{\hat{\pi}}
 }
   \item{pi}{
-Vector of length \emph{g} containing estimate for \eqn{\hat{\ensuremath\boldsymbol{\pi}}}{\hat{\pi}}
+Vector of length \emph{g} containing estimate for \eqn{\hat{\boldsymbol{\pi}}}{\hat{\pi}}
 }
   \item{conds}{
 Vector of length \emph{q} defining the condition (treatment group) for each variable (column) in \code{y}

@@ -26,9 +26,9 @@ model.
 greater than 90% (and corresponding percentage of total observations per cluster) for the
 selected model.
 
-4) \eqn{\ensuremath\boldsymbol{\lambda}}{\lambda} values for the selected model.
+4) \eqn{\boldsymbol{\lambda}}{\lambda} values for the selected model.
 
-5) \eqn{\ensuremath\boldsymbol{\pi}}{\pi} values for the selected model.
+5) \eqn{\boldsymbol{\pi}}{\pi} values for the selected model.
 
 
 
