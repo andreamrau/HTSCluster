@@ -30,10 +30,10 @@ Cluster separation (\dQuote{\code{high}} or \dQuote{\code{low}}, as described by
 \item{conditions }{Vector of length \emph{q} defining the condition (treatment group) for each variable (column) in \code{y}}
 }
 \references{
-Rau, A., Celeux, G., Martin-Magniette, M.-L., Maugis-Rabusseau, C. (2011). Clustering high-throughput sequencing data with Poisson mixture models. Inria Research Report 7786. Available at \url{http://hal.inria.fr/inria-00638082}.
+Rau, A., Celeux, G., Martin-Magniette, M.-L., Maugis-Rabusseau, C. (2011). Clustering high-throughput sequencing data with Poisson mixture models. Inria Research Report 7786. Available at \url{https://hal.inria.fr/inria-00638082}.
 }
 \author{
-Andrea Rau <\url{andrea.rau@jouy.inra.fr}>
+Andrea Rau
 }
 \note{
 If one or more observations are simulated such that all variables have a value of 0, those rows are removed from the data matrix; as such, in some cases the simulated data \code{y} may have less than \code{n} rows.

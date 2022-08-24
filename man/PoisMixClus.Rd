@@ -163,7 +163,7 @@ Papastamoulis, P., Martin-Magniette, M.-L., and Maugis-Rabusseau, C. (2014). On 
 
 Rau, A., Maugis-Rabusseau, C., Martin-Magniette, M.-L., Celeux G. (2015). Co-expression analysis of high-throughput transcriptome sequencing data with Poisson mixture models. Bioinformatics, 31(9):1420-1427.
 
-Rau, A., Celeux, G., Martin-Magniette, M.-L., Maugis-Rabusseau, C (2011). Clustering high-throughput sequencing data with Poisson mixture models. Inria Research Report 7786. Available at \url{http://hal.inria.fr/inria-00638082}.
+Rau, A., Celeux, G., Martin-Magniette, M.-L., Maugis-Rabusseau, C (2011). Clustering high-throughput sequencing data with Poisson mixture models. Inria Research Report 7786. Available at \url{https://hal.inria.fr/inria-00638082}.
 }
 \note{
 Note that the \code{fixed.lambda} argument is primarily intended to be used in the case when a single cluster is fixed to 
@@ -175,7 +175,7 @@ but note that the fixed values of lambda must satisfy the constraint \eqn{\sum_j
 imposed in the model; if this is not the case, a warning message will be printed.
 }
 \author{
-Andrea Rau <\url{andrea.rau@jouy.inra.fr}>
+Andrea Rau
 }
 
 \seealso{

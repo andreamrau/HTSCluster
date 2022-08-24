@@ -106,14 +106,14 @@ MacQueen, J. B. (1967) Some methods for classification and analysis of multivari
 
 Papastamoulis, P., Martin-Magniette, M.-L., and Maugis-Rabusseau, C. (2014). On the estimation of mixtures of Poisson regression models with large number of components. \emph{Computational Statistics and Data Analysis}: 3rd special Issue on Advances in Mixture Models, DOI: 10.1016/j.csda.2014.07.005.
 
-Rau, A., Celeux, G., Martin-Magniette, M.-L., Maugis-Rabusseau, C. (2011). Clustering high-throughput sequencing data with Poisson mixture models. Inria Research Report 7786. Available at \url{http://hal.inria.fr/inria-00638082}.
+Rau, A., Celeux, G., Martin-Magniette, M.-L., Maugis-Rabusseau, C. (2011). Clustering high-throughput sequencing data with Poisson mixture models. Inria Research Report 7786. Available at \url{https://hal.inria.fr/inria-00638082}.
 
 Rau, A., Maugis-Rabusseau, C., Martin-Magniette, M.-L., Celeux G. (2015). Co-expression analysis of high-throughput transcriptome sequencing data with Poisson mixture models. Bioinformatics, 31(9):1420-1427.
 
 Robinson, M. D. and Oshlack, A. (2010) A scaling normalization method for differential expression analysis of RNA-seq data. \emph{Genome Biology}, \bold{11}(R25).
 }
 \author{
-Andrea Rau <\url{andrea.rau@jouy.inra.fr}>
+Andrea Rau
 }
 
 \seealso{
