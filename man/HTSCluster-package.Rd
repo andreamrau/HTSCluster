@@ -11,16 +11,6 @@ transcriptome sequencing (RNA-seq) data. Parameter estimation is performed using
 either the EM or CEM algorithm, and the slope heuristics are used for model 
 selection (i.e., to choose the number of clusters).
 }
-\details{
-\tabular{ll}{
-Package: \tab HTSCluster\cr
-Type: \tab Package\cr
-Version: \tab 2.0.8\cr
-Date: \tab 2016-05-26\cr
-License: \tab GPL (>=3)\cr
-LazyLoad: \tab yes\cr
-}
-}
 \author{
 Andrea Rau, Gilles Celeux, Marie-Laure Martin-Magniette, Cathy Maugis-Rabusseau
 
